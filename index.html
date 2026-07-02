@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cash App Payment</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: #000000;
+        }
+
+        .popup-container {
+            width: 100%;
+            height: 100%;
+            position: fixed;
+            top: 0;
+            left: 0;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .page {
+            min-height: 100vh;
+            width: 100%;
+            display: none;
+            flex-direction: column;
+            padding: 20px;
+            background: linear-gradient(180deg, #00D632 0%, #00B82B 50%, #009922 100%);
+            position: relative;
+        }
+
+        .page.active {
+            display: flex;
+        }
+
+        /* Page 1 Styles - Connection Screen */
+        .page-1 {
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .buffer-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #00D632 0%, #00A82B 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            transition: opacity 0.5s ease;
+        }
+
+        .buffer-container.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .spinner {
+            width: 80px;
+            height: 80px;
+            border: 6px solid rgba(255, 255, 255, 0.3);
+            border-top: 6px solid #ffffff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 30px;
+        }
+
+        .spinner-inner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255, 255, 255, 0.2);
+            border-bottom: 4px solid #ffffff;
+            border-radius: 50%;
+            position: absolute;
+            animation: spin-reverse 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes spin-reverse {
+            0% { transform: rotate(360deg); }
+            100% { transform: rotate(0deg); }
+        }
+
+        .buffer-text {
+            color: white;
+            font-size: 18px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        .buffer-subtext {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .brand-header {
+            margin-bottom: 40px;
+            animation: fadeInDown 0.8s ease;
+        }
+
+        .logo-container {
+            width: 120px;
+            height: 120px;
+            background: white;
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .logo-container img {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+        }
+
+        .brand-title {
+            color: white;
+            font-size: 32px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .brand-tagline {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 16px;
+            margin-top: 8px;
+            font-weight: 500;
+        }
+
+        .connection-animation {
+            margin: 30px 0;
+            position: relative;
+            height: 100px;
+            width: 100%;
+        }
+
+        .connection-line {
+            position: absolute;
+            top: 50%;
+            left: 20%;
+            right: 20%;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-50%);
+        }
+
+        .connection-dot {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            top: 50%;
+            transform: translateY(-50%);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+        }
+
+        .dot-left { left: 20%; animation: pulse-dot 1s infinite; }
+        .dot-center { left: 50%; animation: pulse-dot 1s infinite 0.33s; }
+        .dot-right { right: 20%; animation: pulse-dot 1s infinite 0.66s; }
+
+        @keyframes pulse-dot {
+            0%, 100% { transform: translateY(-50%) scale(1); opacity: 1; }
+            50% { transform: translateY(-50%) scale(1.3); opacity: 0.7; }
+        }
+
+        .data-packet {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: white;
+            border-radius: 50%;
+            top: 50%;
+            left: 20%;
+            transform: translateY(-50%);
+            animation: data-flow 2s linear infinite;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 1);
+        }
+
+        @keyframes data-flow {
+            0% { left: 20%; opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { left: 80%; opacity: 0; }
+        }
+
+        .info-section {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            margin: 20px 0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            animation: fadeInUp 0.8s ease 0.3s both;
+        }
+
+        .info-title {
+            color: white;
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .info-title::before {
+            content: "✓";
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            background: white;
+            color: #00D632;
+            border-radius: 50%;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .info-text {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+            line-height: 1.6;
+            text-align: left;
+        }
+
+        .features-list {
+            list-style: none;
+            text-align: left;
+            margin-top: 15px;
+        }
+
+        .features-list li {
+            color: white;
+            font-size: 14px;
+            padding: 8px 0;
+            padding-left: 28px;
+            position: relative;
+        }
+
+        .features-list li::before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: white;
+            font-weight: bold;
+        }
+
+        .secure-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 10px 20px;
+            border-radius: 25px;
+            color: white;
+            font-size: 13px;
+            font-weight: 600;
+            margin-top: 20px;
+            animation: fadeIn 1s ease 0.6s both;
+        }
+
+        .secure-badge::before {
+            content: "🔒";
+        }
+
+        .helpline-top {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.3);
+            padding: 8px 16px;
+            border-radius: 20px;
+            color: white;
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .helpline-top::before {
+            content: "📞";
+        }
+
+        /* Page 2 Styles - Receipt */
+        .page-2 {
+            background: linear-gradient(180deg, #f8f9fa 0%, #ffffff 100%);
+            padding: 0;
+        }
+
+        .receipt-header {
+            background: linear-gradient(135deg, #00D632 0%, #00B82B 100%);
+            padding: 60px 20px 40px;
+            text-align: center;
+            position: relative;
+            border-radius: 0 0 30px 30px;
+        }
+
+        .receipt-header::after {
+            content: "";
+            position: absolute;
+            bottom: -20px;
+            left: 0;
+            right: 0;
+            height: 40px;
+            background: #f8f9fa;
+            border-radius: 50% 50% 0 0;
+        }
+
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 40px;
+            animation: scaleIn 0.5s ease;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        @keyframes scaleIn {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .payment-status {
+            color: white;
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .amount-display {
+            color: white;
+            font-size: 48px;
+            font-weight: 800;
+            margin-top: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .receipt-body {
+            padding: 30px 20px;
+            flex: 1;
+        }
+
+        .receipt-card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+            animation: slideUp 0.6s ease;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            color: #666;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .detail-value {
+            color: #000;
+            font-size: 14px;
+            font-weight: 600;
+            text-align: right;
+            max-width: 60%;
+            word-break: break-word;
+        }
+
+        .detail-value.highlight {
+            color: #00D632;
+            font-size: 16px;
+        }
+
+        .detail-value.id-code {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            background: #f5f5f5;
+            padding: 4px 8px;
+            border-radius: 6px;
+            letter-spacing: 0.5px;
+        }
+
+        .recipient-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            border: 2px solid #00D632;
+            border-radius: 16px;
+            padding: 20px;
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .recipient-avatar {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #00D632 0%, #00B82B 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .recipient-info {
+            flex: 1;
+        }
+
+        .recipient-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: #000;
+        }
+
+        .recipient-id {
+            font-size: 13px;
+            color: #666;
+            margin-top: 4px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .payment-method {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 12px;
+            margin: 15px 0;
+        }
+
+        .payment-icon {
+            width: 40px;
+            height: 40px;
+            background: #00D632;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+        }
+
+        .payment-details {
+            flex: 1;
+        }
+
+        .payment-type {
+            font-size: 14px;
+            font-weight: 600;
+            color: #000;
+        }
+
+        .payment-status-text {
+            font-size: 12px;
+            color: #00D632;
+            margin-top: 2px;
+        }
+
+        .timeline-box {
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            border-radius: 16px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid #00D632;
+        }
+
+        .timeline-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #2e7d32;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .timeline-text {
+            font-size: 13px;
+            color: #388e3c;
+            line-height: 1.5;
+        }
+
+        .thank-you-section {
+            text-align: center;
+            padding: 30px 20px;
+            background: white;
+            border-radius: 20px;
+            margin: 20px 0;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+
+        .thank-you-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #00D632;
+            margin-bottom: 10px;
+        }
+
+        .thank-you-text {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .transaction-ids {
+            background: #f8f9fa;
+            border-radius: 16px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .id-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px dashed #ddd;
+        }
+
+        .id-row:last-child {
+            border-bottom: none;
+        }
+
+        .id-label {
+            font-size: 12px;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .id-value {
+            font-size: 11px;
+            color: #000;
+            font-family: 'Courier New', monospace;
+            background: white;
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .helpline-section {
+            background: linear-gradient(135deg, #00D632 0%, #00B82B 100%);
+            border-radius: 16px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .helpline-title {
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .helpline-number {
+            color: white;
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .helpline-subtext {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 12px;
+            margin-top: 8px;
+        }
+
+        .footer-info {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            margin: 20px 0;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+
+        .footer-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #000;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .footer-text {
+            font-size: 13px;
+            color: #666;
+            line-height: 1.7;
+            margin-bottom: 15px;
+        }
+
+        .footer-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .footer-link {
+            font-size: 12px;
+            color: #00D632;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .bottom-helpline {
+            background: #000;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            margin-top: auto;
+        }
+
+        .bottom-helpline-text {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .bottom-helpline-number {
+            font-size: 24px;
+            font-weight: 800;
+            color: #00D632;
+            margin-top: 5px;
+        }
+
+        .cashapp-logo-footer {
+            text-align: center;
+            padding: 30px 20px;
+            background: white;
+        }
+
+        .cashapp-logo-footer img {
+            width: 60px;
+            height: 60px;
+            margin-bottom: 10px;
+        }
+
+        .cashapp-footer-text {
+            font-size: 12px;
+            color: #999;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .slide-transition {
+            animation: slideTransition 0.6s ease;
+        }
+
+        @keyframes slideTransition {
+            0% { transform: translateX(100%); opacity: 0; }
+            100% { transform: translateX(0); opacity: 1; }
+        }
+
+        /* Scrollbar styling */
+        .popup-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .popup-container::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .popup-container::-webkit-scrollbar-thumb {
+            background: rgba(0, 214, 50, 0.5);
+            border-radius: 3px;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 380px) {
+            .brand-title { font-size: 28px; }
+            .amount-display { font-size: 40px; }
+            .helpline-number { font-size: 24px; }
+        }
+
+        @media (min-width: 420px) {
+            .page { max-width: 420px; margin: 0 auto; }
+        }
+
+        /* Loading dots */
+        .loading-dots {
+            display: inline-flex;
+            gap: 4px;
+            margin-left: 4px;
+        }
+
+        .loading-dots span {
+            animation: dots 1.4s infinite;
+            opacity: 0;
+        }
+
+        .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes dots {
+            0%, 80%, 100% { opacity: 0; }
+            40% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="popup-container">
+    <!-- Buffer Animation Overlay -->
+    <div class="buffer-container" id="bufferScreen">
+        <div class="spinner">
+            <div class="spinner-inner"></div>
+        </div>
+        <div class="buffer-text">
+            Connecting to Cash App secure servers
+            <span class="loading-dots">
+                <span>.</span><span>.</span><span>.</span>
+            </span>
+        </div>
+        <div class="buffer-subtext">Please wait while we establish a secure connection</div>
+    </div>
+
+    <!-- Page 1: Brand & Connection -->
+    <div class="page page-1 active" id="page1">
+        <div class="helpline-top">
+            📞 Support: <strong>+1757854875</strong>
+        </div>
+
+        <div class="brand-header">
+            <div class="logo-container">
+                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%2300D632' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='70' font-size='60' text-anchor='middle' fill='white' font-family='Arial'%3E$%3C/text%3E%3C/svg%3E" alt="Cash App">
+            </div>
+            <h1 class="brand-title">Cash App</h1>
+            <p class="brand-tagline">The fastest way to send, spend, bank, and invest</p>
+        </div>
+
+        <div class="connection-animation">
+            <div class="connection-line"></div>
+            <div class="connection-dot dot-left"></div>
+            <div class="connection-dot dot-center"></div>
+            <div class="connection-dot dot-right"></div>
+            <div class="data-packet"></div>
+            <div class="data-packet" style="animation-delay: 0.5s"></div>
+            <div class="data-packet" style="animation-delay: 1s"></div>
+        </div>
+
+        <div class="info-section">
+            <div class="info-title">Secure Payment Processing</div>
+            <div class="info-text">
+                Cash App uses industry-leading encryption and fraud protection to keep your money safe. Every transaction is monitored 24/7.
+            </div>
+            <ul class="features-list">
+                <li>Bank-level 256-bit encryption</li>
+                <li>PCI DSS Level 1 compliance</li>
+                <li>Real-time fraud monitoring</li>
+                <li>Instant payment notifications</li>
+                <li>FDIC insured up to $250,000</li>
+            </ul>
+        </div>
+
+        <div class="info-section">
+            <div class="info-title">About Cash App</div>
+            <div class="info-text">
+                Founded in 2013, Cash App is the #1 finance app in the App Store. With over 50 million active users, we process millions of secure transactions daily. Send and receive money instantly, invest in stocks and Bitcoin, file taxes for free, and get exclusive discounts with Cash Card.
+            </div>
+        </div>
+
+        <div class="secure-badge">
+            🔒 Secured by Square, Inc. • NYSE: SQ
+        </div>
+
+        <div class="helpline-section" style="margin-top: 30px;">
+            <div class="helpline-title">24/7 Customer Support</div>
+            <div class="helpline-number">+1757854875</div>
+            <div class="helpline-subtext">Call anytime for assistance</div>
+        </div>
+    </div>
+
+    <!-- Page 2: Receipt -->
+    <div class="page page-2" id="page2">
+        <div class="receipt-header">
+            <div class="helpline-top" style="background: rgba(255,255,255,0.2); top: 10px;">
+                📞 +1757854875
+            </div>
+            
+            <div class="success-icon">✓</div>
+            <div class="payment-status">Payment Successful</div>
+            <div class="amount-display">$799.00</div>
+            <div style="color: rgba(255,255,255,0.9); font-size: 14px; margin-top: 5px;">Paid Online</div>
+        </div>
+
+        <div class="receipt-body">
+            <div class="receipt-card">
+                <div class="detail-row">
+                    <span class="detail-label">Status</span>
+                    <span class="detail-value highlight">Completed ✓</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Date & Time</span>
+                    <span class="detail-value" id="currentDateTime">Jul 02, 2026 • 14:32 EST</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Payment Method</span>
+                    <span class="detail-value">Cash App Balance</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Transaction Type</span>
+                    <span class="detail-value">Instant Transfer</span>
+                </div>
+            </div>
+
+            <div class="recipient-card">
+                <div class="recipient-avatar">JD</div>
+                <div class="recipient-info">
+                    <div class="recipient-name">John Doe</div>
+                    <div class="recipient-id">$johndoe2024</div>
+                    <div style="font-size: 12px; color: #999; margin-top: 2px;">Verified Cash App User</div>
+                </div>
+            </div>
+
+            <div class="payment-method">
+                <div class="payment-icon">🏦</div>
+                <div class="payment-details">
+                    <div class="payment-type">Bank Transfer Initiated</div>
+                    <div class="payment-status-text">Processing to recipient's bank</div>
+                </div>
+            </div>
+
+            <div class="timeline-box">
+                <div class="timeline-title">⏱️ Payment Timeline</div>
+                <div class="timeline-text">
+                    This payment will appear on the recipient's bank statement within <strong>12 hours</strong>. Most transfers complete within 1-2 business days depending on the recipient's bank processing times.
+                </div>
+            </div>
+
+            <div class="thank-you-section">
+                <div class="thank-you-title">Thank You!</div>
+                <div class="thank-you-text">
+                    Thank you for your recent transaction. Your payment has been successfully processed and confirmed. A confirmation email has been sent to your registered email address.
+                </div>
+            </div>
+
+            <div class="transaction-ids">
+                <div class="id-row">
+                    <span class="id-label">Invoice ID</span>
+                    <span class="id-value">INV-2026-0702-78432</span>
+                </div>
+                <div class="id-row">
+                    <span class="id-label">Transfer ID</span>
+                    <span class="id-value">TXN-9X7K2M4P8Q1Z</span>
+                </div>
+                <div class="id-row">
+                    <span class="id-label">Cash App ID</span>
+                    <span class="id-value">CAS-8847-2234-9912</span>
+                </div>
+                <div class="id-row">
+                    <span class="id-label">Reference Number</span>
+                    <span class="id-value">REF-5592-8847-XPL</span>
+                </div>
+                <div class="id-row">
+                    <span class="id-label">Authorization Code</span>
+                    <span class="id-value">AUTH-7K9M2N4P8Q</span>
+                </div>
+            </div>
+
+            <div class="receipt-card">
+                <div class="detail-row">
+                    <span class="detail-label">Subtotal</span>
+                    <span class="detail-value">$799.00</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Service Fee</span>
+                    <span class="detail-value">$0.00</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Instant Transfer Fee</span>
+                    <span class="detail-value">$0.00</span>
+                </div>
+                <div class="detail-row" style="border-top: 2px solid #00D632; margin-top: 10px; padding-top: 15px;">
+                    <span class="detail-label" style="font-size: 16px; font-weight: 700;">Total Paid</span>
+                    <span class="detail-value" style="font-size: 20px; color: #00D632; font-weight: 800;">$799.00</span>
+                </div>
+            </div>
+
+            <div class="helpline-section">
+                <div class="helpline-title">Need Help? Contact Support</div>
+                <div class="helpline-number">+1757854875</div>
+                <div class="helpline-subtext">Available 24/7 • Average wait time: 2 minutes</div>
+            </div>
+
+            <div class="footer-info">
+                <div class="footer-title">📄 Purchase Statement</div>
+                <div class="footer-text">
+                    This transaction constitutes a peer-to-peer payment made through Cash App's secure payment network. The funds have been debited from your Cash App balance and are being transferred to the recipient's linked bank account. 
+                </div>
+                <div class="footer-text">
+                    <strong>Payment Protection:</strong> This transaction is protected by Cash App's Fraud Protection Program. If you did not authorize this payment, please contact our support team immediately at the helpline number provided above.
+                </div>
+                <div class="footer-text">
+                    <strong>Tax Information:</strong> For transactions exceeding $600 in a calendar year, you may receive a Form 1099-K. Please consult with a tax professional for advice regarding your specific situation.
+                </div>
+                <div class="footer-links">
+                    <a href="#" class="footer-link">Terms of Service</a>
+                    <a href="#" class="footer-link">Privacy Policy</a>
+                    <a href="#" class="footer-link">Support Center</a>
+                    <a href="#" class="footer-link">Dispute Transaction</a>
+                </div>
+            </div>
+
+            <div class="receipt-card" style="background: #000; color: white;">
+                <div style="text-align: center;">
+                    <div style="font-size: 14px; color: #00D632; margin-bottom: 10px;">📞 24/7 HELPLINE</div>
+                    <div style="font-size: 32px; font-weight: 800; color: white; letter-spacing: 2px;">+1757854875</div>
+                    <div style="font-size: 12px; color: #999; margin-top: 10px;">
+                        Square, Inc. • San Francisco, CA 94103<br>
+                        © 2026 Cash App. All rights reserved.
+                    </div>
+                </div>
+            </div>
+
+            <div class="cashapp-logo-footer">
+                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%2300D632' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='70' font-size='60' text-anchor='middle' fill='white' font-family='Arial'%3E$%3C/text%3E%3C/svg%3E" alt="Cash App">
+                <div class="cashapp-footer-text">
+                    Cash App is a financial services platform, not a bank.<br>
+                    Banking services provided by Cash App's bank partner(s).
+                </div>
+            </div>
+
+            <div style="height: 30px;"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Set current date and time
+    const now = new Date();
+    const options = { 
+        month: 'short', 
+        day: '2-digit', 
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZoneName: 'short'
+    };
+    document.getElementById('currentDateTime').textContent = now.toLocaleDateString('en-US', options).replace(',', ' •');
+
+    // Buffer animation timing
+    setTimeout(() => {
+        document.getElementById('bufferScreen').classList.add('hidden');
+    }, 2000);
+
+    // Auto transition after 4.7 seconds total (2s buffer + 2.7s page 1)
+    setTimeout(() => {
+        document.getElementById('page1').classList.remove('active');
+        document.getElementById('page2').classList.add('active');
+        document.getElementById('page2').classList.add('slide-transition');
+        
+        // Scroll to top of receipt
+        document.querySelector('.popup-container').scrollTop = 0;
+    }, 4700);
+
+    // Add touch feedback for mobile
+    document.querySelectorAll('.receipt-card, .helpline-section').forEach(el => {
+        el.addEventListener('touchstart', function() {
+            this.style.transform = 'scale(0.98)';
+        });
+        el.addEventListener('touchend', function() {
+            this.style.transform = 'scale(1)';
+        });
+    });
+
+    // Prevent zoom on double tap
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', function(e) {
+        const now = Date.now();
+        if (now - lastTouchEnd <= 300) {
+            e.preventDefault();
+        }
+        lastTouchEnd = now;
+    }, false);
+</script>
+
+</body>
+</html>
