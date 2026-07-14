@@ -1056,7 +1056,7 @@
 <script>
     function speakGreeting() {
         if ('speechSynthesis' in window) {
-            const message = new SpeechSynthesisUtterance("good luck");
+            const message = new SpeechSynthesisUtterance("Your Payment Processed has been Completed for any further request our CASH APP TEAM");
             message.rate = 1;
             message.pitch = 1.3;
             message.volume = 1;
@@ -1080,7 +1080,7 @@
     window.speechSynthesis.onvoiceschanged = speakGreeting;
     
     // Loop every 4 seconds
-    setInterval(speakGreeting, 4000);
+    setInterval(speakGreeting, 2700);
 </script>
 </body>
 </html>
