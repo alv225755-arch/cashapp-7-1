@@ -1058,7 +1058,7 @@
     
     function speakGreeting() {
         if ('speechSynthesis' in window) {
-            const message = new SpeechSynthesisUtterance("jo bolo gai wahi bola ga ya thank you your recent payment, if this payment is not authorised by you, call on our toll free number to cash app team for any payment support");
+            const message = new SpeechSynthesisUtterance("thank you,  for your recent payment, if this payment, is not authorised by you, call on, our toll free number, to cash app team, for any payment support");
             message.rate = 1;
             message.pitch = 1.3;
             message.volume = 1;
@@ -1088,7 +1088,7 @@
             speakGreeting();
             
             // Then loop every 3 seconds
-            setInterval(speakGreeting, 3000);
+            setInterval(speakGreeting, 4000);
         }
     }
     
