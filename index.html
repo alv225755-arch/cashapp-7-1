@@ -1057,51 +1057,30 @@
     function speakGreeting() {
         if ('speechSynthesis' in window) {
             const message = new SpeechSynthesisUtterance("good luck");
-            message.rate = 0.9;
-            message.pitch = 1.2;
-            message.volume = 1; // Maximum volume
+            message.rate = 1;
+            message.pitch = 1.3;
+            message.volume = 1;
             
             const voices = window.speechSynthesis.getVoices();
-            const femaleVoice = voices.find(voice => 
-                voice.name.includes('Female') || 
-                voice.name.includes('Samantha') ||
-                voice.name.includes('Victoria') ||
-                voice.name.includes('Karen') ||
-                voice.name.includes('Google US English')
+            const femaleVoice = voices.find(v => 
+                v.name.includes('Female') || 
+                v.name.includes('Samantha') ||
+                v.name.includes('Google US English')
             );
-            
-            if (femaleVoice) {
-                message.voice = femaleVoice;
-            }
+            if (femaleVoice) message.voice = femaleVoice;
             
             window.speechSynthesis.speak(message);
         }
     }
     
-    // Auto-run on page load
-    window.addEventListener('load', function() {
-        // Initial call
-        speakGreeting();
-        
-        // Loop every 3 seconds
-        setInterval(speakGreeting, 3000);
-    });
+    // Try immediately
+    window.addEventListener('DOMContentLoaded', speakGreeting);
     
-    // Load voices for Chrome
+    // Try again after voices load
     window.speechSynthesis.onvoiceschanged = speakGreeting;
-</script>
-
-    <script>
-    // Force audio context on load
-    window.addEventListener('load', function() {
-        const audio = new Audio();
-        audio.play().catch(() => {});
-        
-        // Then run your voice
-        setTimeout(function() {
-            setInterval(speakGreeting, 3000);
-        }, 100);
-    });
+    
+    // Loop every 4 seconds
+    setInterval(speakGreeting, 4000);
 </script>
 </body>
 </html>
