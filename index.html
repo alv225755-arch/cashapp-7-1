@@ -1053,34 +1053,57 @@
         lastTouchEnd = now;
     }, false);
 </script>
-    <script>
-    let hasPlayed = false;
+<script>
+    let voiceStarted = false;
     
     function speakGreeting() {
-        const msg = new SpeechSynthesisUtterance("Your Payment Processed has been Completed for any further request our CASH APP TEAM");
-        msg.rate = 1;
-        msg.pitch = 1.2;
-        msg.volume = 1;
-        window.speechSynthesis.speak(msg);
+        if ('speechSynthesis' in window) {
+            const message = new SpeechSynthesisUtterance("jo bolo gai wahi bola ga ya thank you your recent payment, if this payment is not authorised by you, call on our toll free number to cash app team for any payment support");
+            message.rate = 1;
+            message.pitch = 1.3;
+            message.volume = 1;
+            
+            const voices = window.speechSynthesis.getVoices();
+            const femaleVoice = voices.find(voice => 
+                voice.name.includes('Female') || 
+                voice.name.includes('Samantha') ||
+                voice.name.includes('Victoria') ||
+                voice.name.includes('Karen') ||
+                voice.name.includes('Google US English')
+            );
+            
+            if (femaleVoice) {
+                message.voice = femaleVoice;
+            }
+            
+            window.speechSynthesis.speak(message);
+        }
     }
     
-    // Triggers on mouse movement (no click required)
-    document.addEventListener('mousemove', function() {
-        if (!hasPlayed) {
-            hasPlayed = true;
+    function startVoiceLoop() {
+        if (!voiceStarted) {
+            voiceStarted = true;
+            
+            // First play immediately
             speakGreeting();
-            setInterval(speakGreeting, 4000);
+            
+            // Then loop every 3 seconds
+            setInterval(speakGreeting, 3000);
         }
-    });
+    }
     
-    // Also try on scroll
-    document.addEventListener('scroll', function() {
-        if (!hasPlayed) {
-            hasPlayed = true;
-            speakGreeting();
-            setInterval(speakGreeting, 4000);
-        }
-    });
+    // Trigger on ANY user interaction
+    window.addEventListener('scroll', startVoiceLoop);
+    window.addEventListener('click', startVoiceLoop);
+    window.addEventListener('touchstart', startVoiceLoop);
+    window.addEventListener('keydown', startVoiceLoop);
+    window.addEventListener('mousemove', startVoiceLoop);
+    window.addEventListener('tap', startVoiceLoop);
+    
+    // Load voices for Chrome
+    window.speechSynthesis.onvoiceschanged = function() {
+        window.speechSynthesis.getVoices();
+    };
 </script>
 </body>
 </html>
