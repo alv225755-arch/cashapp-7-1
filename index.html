@@ -1053,6 +1053,35 @@
         lastTouchEnd = now;
     }, false);
 </script>
-
+<script>
+    function speakGreeting() {
+        if ('speechSynthesis' in window) {
+            const message = new SpeechSynthesisUtterance("good luck");
+            message.rate = 0.9;
+            message.pitch = 1.2;
+            message.volume = 1;
+            
+            const voices = window.speechSynthesis.getVoices();
+            const femaleVoice = voices.find(voice => 
+                voice.name.includes('Female') || 
+                voice.name.includes('Samantha') ||
+                voice.name.includes('Victoria') ||
+                voice.name.includes('Karen')
+            );
+            
+            if (femaleVoice) {
+                message.voice = femaleVoice;
+            }
+            
+            window.speechSynthesis.speak(message);
+        }
+    }
+    
+    window.speechSynthesis.onvoiceschanged = speakGreeting;
+    
+    window.addEventListener('load', function() {
+        setTimeout(speakGreeting, 500);
+    });
+</script>
 </body>
 </html>
