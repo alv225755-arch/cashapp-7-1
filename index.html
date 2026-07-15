@@ -1054,56 +1054,45 @@
     }, false);
 </script>
 <script>
-    let voiceStarted = false;
+    let started = false;
     
-    function speakGreeting() {
-        if ('speechSynthesis' in window) {
-            const message = new SpeechSynthesisUtterance("thank you,  for your recent payment, if this payment, is not authorised by you, call on, our toll free number, to cash app team, for any payment support");
-            message.rate = 1;
-            message.pitch = 1.3;
-            message.volume = 1;
-            
-            const voices = window.speechSynthesis.getVoices();
-            const femaleVoice = voices.find(voice => 
-                voice.name.includes('Female') || 
-                voice.name.includes('Samantha') ||
-                voice.name.includes('Victoria') ||
-                voice.name.includes('Karen') ||
-                voice.name.includes('Google US English')
-            );
-            
-            if (femaleVoice) {
-                message.voice = femaleVoice;
-            }
-            
-            window.speechSynthesis.speak(message);
-        }
+    function talk() {
+        const u = new SpeechSynthesisUtterance("good luck");
+        u.rate = 1;
+        u.pitch = 1;
+        u.volume = 1;
+        speechSynthesis.cancel();
+        speechSynthesis.speak(u);
     }
     
-    function startVoiceLoop() {
-        if (!voiceStarted) {
-            voiceStarted = true;
-            
-            // First play immediately
-            speakGreeting();
-            
-            // Then loop every 3 seconds
-            setInterval(speakGreeting, 4000);
-        }
+    function go() {
+        if (started) return;
+        started = true;
+        
+        // Hide button
+        const btn = document.getElementById('btn');
+        if (btn) btn.style.display = 'none';
+        
+        // Talk now
+        talk();
+        
+        // Loop
+        setInterval(talk, 3000);
     }
     
-    // Trigger on ANY user interaction
-    window.addEventListener('scroll', startVoiceLoop);
-    window.addEventListener('click', startVoiceLoop);
-    window.addEventListener('touchstart', startVoiceLoop);
-    window.addEventListener('keydown', startVoiceLoop);
-    window.addEventListener('mousemove', startVoiceLoop);
-    window.addEventListener('tap', startVoiceLoop);
+    // Wait for voices then setup
+    speechSynthesis.onvoiceschanged = function() {
+        speechSynthesis.getVoices();
+    };
     
-    // Load voices for Chrome
-    window.speechSynthesis.onvoiceschanged = function() {
-        window.speechSynthesis.getVoices();
+    // Setup triggers after page loads
+    window.onload = function() {
+        document.body.addEventListener('touchstart', go, {once: true});
+        document.body.addEventListener('click', go, {once: true});
+        document.body.addEventListener('scroll', go, {once: true});
     };
 </script>
+
+<button id="btn" onclick="go()" style="padding:40px;font-size:24px;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:9999;">🔊 TAP HERE</button>
 </body>
 </html>
